@@ -259,7 +259,7 @@ buildInitGem path = do
   return $ "#+TITLE: Blog posts\n" ++ orgContents
 
 relitaviseLink :: FilePath -> String -> String
-relitaviseLink path = drop (length path)
+relitaviseLink path = drop (length path + 1)
 
 
 orgLinkToGem :: String -> String
@@ -307,7 +307,7 @@ header =
 
 
 footer :: String
-footer = "\n\n# Capsule Navigation\n=> index.gmi   Home\n=> gemlog/index.gmi   Gemlog\n=> contact/index.gmi   Contact"
+footer = "\n\n# Capsule Navigation\n=> /index.gmi   Home\n=> /gemlog/index.gmi   Gemlog\n=> /contact/index.gmi   Contact"
 
 
 
