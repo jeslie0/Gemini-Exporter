@@ -29,7 +29,7 @@ extractTitle text =
 
 extractDate :: String -> Maybe String
 extractDate text =
-  let dateLine = filter (\x -> "date" `isSubsequenceOf` x || "DATE" `isSubsequenceOf` x) $ lines text
+  let dateLine = filter (\x -> "#+date" `isSubsequenceOf` x || "#+DATE" `isSubsequenceOf` x) $ lines text
   in if null dateLine then Nothing
   else
     Just $ drop (length "#+DATE: ") $ head dateLine
@@ -117,9 +117,11 @@ makeTables [x]
   | otherwise = [x]
 makeTables (x:y:xs)
   | null x = x : makeTables (y:xs)
-  | null y = (destroyLinks . endOfTable $ x):y:makeTables (xs)
+  -- | null y = (destroyLinks . endOfTable $ x):y:makeTables (xs)
+  | null y && head x == '|' = (destroyLinks . endOfTable $ x):makeTables (y:xs)
+  | null y && head x /= '|' = x:y:makeTables xs
   | head x == '|' && head y /= '|' = (destroyLinks . endOfTable $ x):makeTables (y:xs)
-  | head x /= '|' && head y == '|' = (destroyLinks . startOfTable $ x):makeTables (y:xs)
+  | head x /= '|' && head y == '|' = x:(destroyLinks . startOfTable $ y):makeTables (xs)
   | otherwise = x:makeTables (y:xs)
 
 orgToGem :: String -> String -> String -> String
@@ -297,7 +299,7 @@ orgGemFunc path =
 
 header :: String
 header =
-  "```\n  _  __           ______ _ _               _   _\n | |/ /          |  ____(_) |             | | (_)\n | ' / __ _ _ __ | |__   _| |__  _ __ __ _| |_ _  ___  _ __\n |  < / _` | '_ \\|  __| | | '_ \\| '__/ _` | __| |/ _ \\| '_ \\ \n | . \\ (_| | | | | |    | | |_) | | | (_| | |_| | (_) | | | |\n |_|\\_\\__,_|_| |_|_|    |_|_.__/|_|  \\__,_|\\__|_|\\___/|_| |_|\n\n++++++++++++++++*****************************++++++++++++++++\n                James Leslie's Gemini Capsule\n++++++++++++++++*****************************++++++++++++++++\n```\n"
+  "```\n  _  __           ______ _ _               _   _\n | |/ /          |  ____(_) |             | | (_)\n | ' / __ _ _ __ | |__   _| |__  _ __ __ _| |_ _  ___  _ __\n |  < / _` | '_ \\|  __| | | '_ \\| '__/ _` | __| |/ _ \\| '_ \\ \n | . \\ (_| | | | | |    | | |_) | | | (_| | |_| | (_) | | | |\n |_|\\_\\__,_|_| |_|_|    |_|_.__/|_|  \\__,_|\\__|_|\\___/|_| |_|\n\n++++++++++++++++*****************************++++++++++++++++\n                James Leslie's Gemini Capsule\n++++++++++++++++*****************************++++++++++++++++\n```"
 
 
 footer :: String
