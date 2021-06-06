@@ -24,8 +24,11 @@ addFooter foot body = body ++ foot
 -- Every org file starts with "#+title: " followed by the titlje
 extractTitle :: String -> String
 extractTitle text =
-  let removedHead = drop (length "#+title: ") text
-  in takeWhile (/= '\n') removedHead
+  if "#+title" `isSubsequenceOf` text || "#+TITLE" `isSubsequenceOf` text then
+    let removedHead = drop (length "#+title: ") text
+    in takeWhile (/= '\n') removedHead
+  else
+    ""
 
 extractDate :: String -> Maybe String
 extractDate text =
@@ -121,16 +124,17 @@ makeTables (x:y:xs)
   | null y && head x == '|' = (destroyLinks . endOfTable $ x):makeTables (y:xs)
   | null y && head x /= '|' = x:y:makeTables xs
   | head x == '|' && head y /= '|' = (destroyLinks . endOfTable $ x):makeTables (y:xs)
-  | head x /= '|' && head y == '|' = x:(destroyLinks . startOfTable $ y):makeTables (xs)
+  | head x /= '|' && head y == '|' = x:(destroyLinks . startOfTable $ y):makeTables xs
   | otherwise = x:makeTables (y:xs)
 
 orgToGem :: String -> String -> String -> String
 orgToGem contents header footer =
-  let title = extractTitle contents
+  let title' = "# " ++ extractTitle contents
+      title = extractTitle contents
       maybeDate = extractDate contents
       linesContent = lines contents
       cleanedContent = map cleanLine linesContent
-      addinHeadFootTitle = [header] ++ ["# " ++ title ++ date maybeDate] ++ makeTables cleanedContent ++ [footer]
+      addinHeadFootTitle = [header] ++ [if title == "" then date maybeDate else title' ++ date maybeDate] ++ makeTables cleanedContent ++ [footer]
   in  orgLinkToGem . unlines $ addinHeadFootTitle
   where
     date :: Maybe String -> String
@@ -286,7 +290,7 @@ blogPostMaker dir = do
 
 orgGemFunc :: FilePath -> IO ()
 orgGemFunc path =
-  if (drop (length path -4) path /= ".org") then do
+  if drop (length path -4) path /= ".org" then
     return ()
     else do
     handle <- openFile path ReadMode
@@ -308,5 +312,5 @@ footer = "\n\n# Capsule Navigation\n=> index.gmi   Home\n=> gemlog/index.gmi   G
 
 
 gemDirMk :: String -> String -> IO ()
-gemDirMk initDir outDir = do
+gemDirMk initDir outDir =
   copyAndEditFilesInFolder initDir outDir orgGemFunc
